@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Clock, ArrowRight, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { getSchedule } from '../../services/scheduleService';
 
 const dayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
@@ -9,6 +10,7 @@ const dayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday
 const TodayClasses = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTheme();
   const [todayLessons, setTodayLessons] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,24 +39,24 @@ const TodayClasses = () => {
     <div className="card p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="section-title">Bugungi Darslar</h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Bugungi dars jadvali</p>
+          <h2 className="section-title">{t('todayClasses')}</h2>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{t('todaySchedule')}</p>
         </div>
         <button
           onClick={() => navigate('/schedule')}
           className="text-xs font-semibold text-primary-600 hover:text-primary-700 flex items-center gap-1"
         >
-          Jadval <ArrowRight size={14} />
+          {t('viewSchedule')} <ArrowRight size={14} />
         </button>
       </div>
 
       <div className="space-y-3">
         {loading ? (
-          <div className="text-center py-6 text-gray-400 text-xs animate-pulse">Yuklanmoqda...</div>
+          <div className="text-center py-6 text-gray-400 text-xs animate-pulse">{t('loading')}</div>
         ) : todayLessons.length === 0 ? (
           <div className="text-center py-8 text-gray-400">
             <BookOpen size={32} className="mx-auto mb-2 opacity-20" />
-            <p className="text-xs">Bugun darslar yo'q yoki jadval belgilanmagan.</p>
+            <p className="text-xs">{t('noClassesToday')}</p>
           </div>
         ) : (
           todayLessons.map((cls, i) => (
@@ -73,7 +75,7 @@ const TodayClasses = () => {
                   </h4>
                   <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                     <span className="flex items-center gap-1"><Clock size={12} /> {cls.startTime} - {cls.endTime}</span>
-                    {cls.room && <><span>•</span><span>Xona: {cls.room}</span></>}
+                    {cls.room && <><span>•</span><span>{t('room')}: {cls.room}</span></>}
                   </div>
                 </div>
               </div>

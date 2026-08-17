@@ -1,7 +1,9 @@
 import { get, set, generateId, KEYS } from './storageService';
 import { supabase } from './supabaseClient';
+import { initializeMockData } from './mockData';
 
 export const getStudents = async (teacherId) => {
+  initializeMockData();
   if (!teacherId) return [];
 
   try {
@@ -11,7 +13,7 @@ export const getStudents = async (teacherId) => {
       .eq('teacher_id', teacherId)
       .order('created_at', { ascending: false });
 
-    if (!error && data) {
+    if (!error && data && data.length > 0) {
       const mapped = data.map(d => ({
         id: d.id,
         teacherId: d.teacher_id,
@@ -35,12 +37,18 @@ export const getStudents = async (teacherId) => {
     console.warn('Supabase getStudents error, fallback to cache:', err);
   }
 
-  // Local Storage Cache Fallback
-  const cached = get(KEYS.STUDENTS + '_' + teacherId) || [];
+  let cached = get(KEYS.STUDENTS + '_' + teacherId);
+  if (!cached) {
+    const all = get(KEYS.STUDENTS) || [];
+    const match = all.filter(s => s.teacherId === teacherId);
+    cached = match;
+    set(KEYS.STUDENTS + '_' + teacherId, cached);
+  }
   return cached;
 };
 
 export const getStudentById = async (id) => {
+  initializeMockData();
   try {
     const { data, error } = await supabase.from('students').select('*').eq('id', id).single();
     if (!error && data) {
@@ -68,6 +76,7 @@ export const getStudentById = async (id) => {
 };
 
 export const addStudent = async (teacherId, data) => {
+  initializeMockData();
   const localId = generateId('student');
   const newStudent = {
     id: localId,
@@ -108,14 +117,18 @@ export const addStudent = async (teacherId, data) => {
     console.warn('Supabase addStudent error:', err);
   }
 
-  // Update Cache
   const cached = get(KEYS.STUDENTS + '_' + teacherId) || [];
   set(KEYS.STUDENTS + '_' + teacherId, [newStudent, ...cached]);
+
+  // Also add to global STUDENTS array
+  const all = get(KEYS.STUDENTS) || [];
+  set(KEYS.STUDENTS, [newStudent, ...all]);
 
   return newStudent;
 };
 
 export const updateStudent = async (id, updates, teacherId) => {
+  initializeMockData();
   try {
     await supabase.from('students').update({
       full_name: updates.fullName,
@@ -136,10 +149,18 @@ export const updateStudent = async (id, updates, teacherId) => {
     }
   }
 
+  const all = get(KEYS.STUDENTS) || [];
+  const globalIdx = all.findIndex(s => s.id === id);
+  if (globalIdx !== -1) {
+    all[globalIdx] = { ...all[globalIdx], ...updates };
+    set(KEYS.STUDENTS, all);
+  }
+
   return true;
 };
 
 export const deleteStudent = async (id, teacherId) => {
+  initializeMockData();
   try {
     await supabase.from('students').delete().eq('id', id);
   } catch (err) {
@@ -150,6 +171,9 @@ export const deleteStudent = async (id, teacherId) => {
     const cached = get(KEYS.STUDENTS + '_' + teacherId) || [];
     set(KEYS.STUDENTS + '_' + teacherId, cached.filter(s => s.id !== id));
   }
+
+  const all = get(KEYS.STUDENTS) || [];
+  set(KEYS.STUDENTS, all.filter(s => s.id !== id));
 
   return true;
 };

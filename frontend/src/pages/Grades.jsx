@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageContainer from '../components/layout/PageContainer';
 import Modal from '../components/common/Modal';
+import StudentModal from '../components/students/StudentModal';
 import { Loading } from '../components/common';
 import { useAuth } from '../context/AuthContext';
 import { getClasses } from '../services/classService';
-import { getStudents } from '../services/studentService';
+import { getStudents, addStudent } from '../services/studentService';
 import { getGrades, addGrade, deleteGrade } from '../services/gradeService';
-import { Plus, Star, BookOpen } from 'lucide-react';
+import { Plus, Star, BookOpen, UserPlus } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
 const Grades = () => {
@@ -15,11 +16,13 @@ const Grades = () => {
   const navigate = useNavigate();
   const [classes, setClasses] = useState([]);
   const [selectedClassId, setSelectedClassId] = useState('');
+  const [allStudents, setAllStudents] = useState([]);
   const [students, setStudents] = useState([]);
   const [grades, setGradesState] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [studentModalOpen, setStudentModalOpen] = useState(false);
   const [gradeForm, setGradeForm] = useState({
     studentId: '',
     type: 'homework',
@@ -30,15 +33,13 @@ const Grades = () => {
   const loadClassesAndStudents = async () => {
     if (user) {
       setLoading(true);
-      const [clsList, allStudents] = await Promise.all([
+      const [clsList, stList] = await Promise.all([
         getClasses(user.id),
         getStudents(user.id),
       ]);
 
-      // Combine official classes and any class names attached to students
       const combinedClasses = [...(clsList || [])];
-      
-      (allStudents || []).forEach(s => {
+      (stList || []).forEach(s => {
         if (s.classId && !combinedClasses.some(c => c.id === s.classId || c.name === s.classId)) {
           combinedClasses.push({
             id: s.classId,
@@ -49,6 +50,7 @@ const Grades = () => {
       });
 
       setClasses(combinedClasses);
+      setAllStudents(stList || []);
 
       if (combinedClasses.length > 0 && !selectedClassId) {
         setSelectedClassId(combinedClasses[0].id);
@@ -59,9 +61,10 @@ const Grades = () => {
 
   const loadClassData = async () => {
     if (user && selectedClassId) {
-      const allStudents = await getStudents(user.id);
+      const stListAll = await getStudents(user.id);
+      setAllStudents(stListAll || []);
       const clsObj = classes.find(c => c.id === selectedClassId);
-      const stList = allStudents.filter(s => s.classId === selectedClassId || s.classId === clsObj?.name);
+      const stList = stListAll.filter(s => s.classId === selectedClassId || (clsObj && s.classId === clsObj.name));
       setStudents(stList || []);
       const grList = await getGrades(user.id, { classId: selectedClassId });
       setGradesState(grList || []);
@@ -72,13 +75,20 @@ const Grades = () => {
   };
 
   useEffect(() => { loadClassesAndStudents(); }, [user]);
-  useEffect(() => { loadClassData(); }, [user, selectedClassId]);
+  useEffect(() => { loadClassData(); }, [user, selectedClassId, classes]);
 
   const handleAddGrade = async (e) => {
     e.preventDefault();
     if (!selectedClassId || !gradeForm.studentId) return;
     await addGrade(user.id, { ...gradeForm, classId: selectedClassId });
     setModalOpen(false);
+    await loadClassData();
+  };
+
+  const handleSaveStudent = async (data) => {
+    await addStudent(user.id, data);
+    setStudentModalOpen(false);
+    await loadClassesAndStudents();
     await loadClassData();
   };
 
@@ -109,13 +119,20 @@ const Grades = () => {
             <h1 className="page-title">Baholar Jurnali</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">Baholarni kiriting (1-5 tizimi bo'yicha)</p>
           </div>
-          <button
-            onClick={() => setModalOpen(true)}
-            className="btn-primary"
-            disabled={classes.length === 0}
-          >
-            <Plus size={18} /> Baho Qo'shish
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setStudentModalOpen(true)}
+              className="btn-secondary cursor-pointer"
+            >
+              <UserPlus size={18} /> O'quvchi Qo'shish
+            </button>
+            <button
+              onClick={() => setModalOpen(true)}
+              className="btn-primary cursor-pointer"
+            >
+              <Plus size={18} /> Baho Qo'shish
+            </button>
+          </div>
         </div>
 
         {/* Class Filter */}
@@ -125,7 +142,7 @@ const Grades = () => {
             <select
               value={selectedClassId}
               onChange={e => setSelectedClassId(e.target.value)}
-              className="input-field max-w-xs font-bold"
+              className="input-field max-w-xs font-bold cursor-pointer"
             >
               {classes.length === 0 ? (
                 <option value="">Sinflar mavjud emas</option>
@@ -144,18 +161,7 @@ const Grades = () => {
           )}
         </div>
 
-        {loading ? <Loading rows={3} /> : classes.length === 0 ? (
-          <div className="card p-10 text-center space-y-3">
-            <BookOpen size={40} className="mx-auto text-gray-400 opacity-40" />
-            <h3 className="text-base font-bold text-gray-800 dark:text-gray-200">Hali hech qanday sinf yaratilmagan</h3>
-            <p className="text-xs text-gray-500 max-w-md mx-auto">
-              Baholar jurnalidan foydalanish uchun avval "Sinflar" bo'limida sinf va o'quvchilar qo'shishingiz kerak.
-            </p>
-            <button onClick={() => navigate('/classes')} className="btn-primary inline-flex">
-              + Sinf Yaratish
-            </button>
-          </div>
-        ) : (
+        {loading ? <Loading rows={3} /> : (
           <>
             {/* Grade Analytics */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -196,11 +202,16 @@ const Grades = () => {
 
             {/* Student Grade Table */}
             {students.length === 0 ? (
-              <div className="card p-8 text-center text-gray-500 space-y-2">
+              <div className="card p-8 text-center text-gray-500 space-y-3">
                 <p>Bu sinfda o'quvchilar topilmadi.</p>
-                <button onClick={() => navigate('/students')} className="btn-secondary text-xs inline-flex">
-                  + O'quvchi Qo'shish
-                </button>
+                <div className="flex justify-center gap-3">
+                  <button onClick={() => setStudentModalOpen(true)} className="btn-primary text-xs inline-flex cursor-pointer">
+                    <UserPlus size={14} /> + O'quvchi Qo'shish
+                  </button>
+                  <button onClick={() => navigate('/students')} className="btn-secondary text-xs inline-flex cursor-pointer">
+                    Barcha o'quvchilarga o'tish
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="card overflow-hidden">
@@ -264,7 +275,7 @@ const Grades = () => {
                             <td className="table-cell text-right">
                               <button
                                 onClick={() => { setGradeForm(f => ({ ...f, studentId: s.id })); setModalOpen(true); }}
-                                className="btn-secondary text-xs py-1 px-3"
+                                className="btn-secondary text-xs py-1 px-3 cursor-pointer"
                               >
                                 + Baho
                               </button>
@@ -284,7 +295,7 @@ const Grades = () => {
         <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Baho Qo'shish" size="sm">
           <form onSubmit={handleAddGrade} className="p-6 space-y-4">
             <div>
-              <label className="label">O'quvchi</label>
+              <label className="label">O'quvchi *</label>
               <select
                 value={gradeForm.studentId}
                 onChange={e => setGradeForm(f => ({ ...f, studentId: e.target.value }))}
@@ -292,8 +303,8 @@ const Grades = () => {
                 required
               >
                 <option value="">O'quvchini tanlang...</option>
-                {students.map(s => (
-                  <option key={s.id} value={s.id}>{s.fullName}</option>
+                {(students.length > 0 ? students : allStudents).map(s => (
+                  <option key={s.id} value={s.id}>{s.fullName} ({s.classId})</option>
                 ))}
               </select>
             </div>
@@ -322,7 +333,7 @@ const Grades = () => {
                     key={score}
                     type="button"
                     onClick={() => setGradeForm(f => ({ ...f, score }))}
-                    className={`flex-1 py-2.5 rounded-xl font-bold text-lg transition-all ${
+                    className={`flex-1 py-2.5 rounded-xl font-bold text-lg transition-all cursor-pointer ${
                       gradeForm.score === score
                         ? 'bg-amber-500 text-white shadow-md shadow-amber-500/30 scale-105'
                         : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-amber-50 hover:text-amber-600'
@@ -345,11 +356,20 @@ const Grades = () => {
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
-              <button type="button" onClick={() => setModalOpen(false)} className="btn-secondary">Bekor</button>
-              <button type="submit" className="btn-primary">Saqlash</button>
+              <button type="button" onClick={() => setModalOpen(false)} className="btn-secondary cursor-pointer">Bekor</button>
+              <button type="submit" className="btn-primary cursor-pointer">Saqlash</button>
             </div>
           </form>
         </Modal>
+
+        {/* Student Add Modal */}
+        <StudentModal
+          isOpen={studentModalOpen}
+          onClose={() => setStudentModalOpen(false)}
+          onSave={handleSaveStudent}
+          classes={classes}
+        />
+
       </div>
     </PageContainer>
   );

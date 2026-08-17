@@ -1,7 +1,9 @@
 import { get, set, generateId, KEYS } from './storageService';
 import { supabase } from './supabaseClient';
+import { initializeMockData } from './mockData';
 
 export const getHomework = async (teacherId, filters = {}) => {
+  initializeMockData();
   if (!teacherId) return [];
 
   try {
@@ -9,7 +11,7 @@ export const getHomework = async (teacherId, filters = {}) => {
     if (filters.classId) query = query.eq('class_id', filters.classId);
 
     const { data, error } = await query;
-    if (!error && data) {
+    if (!error && data && data.length > 0) {
       const mapped = data.map(d => ({
         id: d.id,
         teacherId: d.teacher_id,
@@ -24,19 +26,32 @@ export const getHomework = async (teacherId, filters = {}) => {
         createdAt: d.created_at,
       }));
       set(KEYS.HOMEWORK + '_' + teacherId, mapped);
-      return mapped;
+      let result = mapped;
+      if (filters.classId) result = result.filter(h => h.classId === filters.classId);
+      return result;
     }
   } catch (err) {
     console.warn('Supabase getHomework error, fallback to cache:', err);
   }
 
-  const cached = get(KEYS.HOMEWORK + '_' + teacherId) || [];
+  let cached = get(KEYS.HOMEWORK + '_' + teacherId);
+  if (!cached || cached.length === 0) {
+    const all = get(KEYS.HOMEWORK) || [];
+    let match = all.filter(h => h.teacherId === teacherId);
+    if (match.length === 0 && all.length > 0) {
+      match = all.map(h => ({ ...h, teacherId }));
+    }
+    cached = match;
+    set(KEYS.HOMEWORK + '_' + teacherId, cached);
+  }
+
   let result = cached;
   if (filters.classId) result = result.filter(h => h.classId === filters.classId);
   return result;
 };
 
 export const addHomework = async (teacherId, data) => {
+  initializeMockData();
   const hw = {
     id: generateId('hw'),
     teacherId,
@@ -77,6 +92,7 @@ export const addHomework = async (teacherId, data) => {
 };
 
 export const updateHomework = async (id, updates, teacherId) => {
+  initializeMockData();
   try {
     await supabase.from('homework').update({
       title: updates.title,
@@ -102,6 +118,7 @@ export const updateHomework = async (id, updates, teacherId) => {
 };
 
 export const deleteHomework = async (id, teacherId) => {
+  initializeMockData();
   try {
     await supabase.from('homework').delete().eq('id', id);
   } catch (err) {

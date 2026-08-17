@@ -1,7 +1,9 @@
 import { get, set, generateId, KEYS } from './storageService';
 import { supabase } from './supabaseClient';
+import { initializeMockData } from './mockData';
 
 export const getAttendance = async (teacherId, filters = {}) => {
+  initializeMockData();
   if (!teacherId) return [];
 
   try {
@@ -18,7 +20,7 @@ export const getAttendance = async (teacherId, filters = {}) => {
     }
 
     const { data, error } = await query;
-    if (!error && data) {
+    if (!error && data && data.length > 0) {
       const mapped = data.map(d => ({
         id: d.id,
         teacherId: d.teacher_id,
@@ -30,13 +32,30 @@ export const getAttendance = async (teacherId, filters = {}) => {
         createdAt: d.created_at,
       }));
       set(KEYS.ATTENDANCE + '_' + teacherId, mapped);
-      return mapped;
+      let result = mapped;
+      if (filters.classId && filters.classId !== 'all') {
+        result = result.filter(a => a.classId === filters.classId);
+      }
+      if (filters.date) {
+        result = result.filter(a => a.date === filters.date);
+      }
+      return result;
     }
   } catch (err) {
     console.warn('Supabase getAttendance error, fallback to cache:', err);
   }
 
-  const cached = get(KEYS.ATTENDANCE + '_' + teacherId) || [];
+  let cached = get(KEYS.ATTENDANCE + '_' + teacherId);
+  if (!cached || cached.length === 0) {
+    const all = get(KEYS.ATTENDANCE) || [];
+    let match = all.filter(a => a.teacherId === teacherId);
+    if (match.length === 0 && all.length > 0) {
+      match = all.map(a => ({ ...a, teacherId }));
+    }
+    cached = match;
+    set(KEYS.ATTENDANCE + '_' + teacherId, cached);
+  }
+
   let result = cached;
   if (filters.classId && filters.classId !== 'all') {
     result = result.filter(a => a.classId === filters.classId);
@@ -52,6 +71,7 @@ export const getAttendanceForDate = async (teacherId, classId, date) => {
 };
 
 export const saveAttendance = async (teacherId, classId, date, records) => {
+  initializeMockData();
   const supabasePayload = records.map(r => ({
     teacher_id: teacherId,
     class_id: classId || 'all',

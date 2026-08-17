@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import {
   LayoutDashboard, Users, BookOpen, CalendarCheck, Star,
-  FileText, Calendar, BarChart2, Bell, Settings, LogOut,
+  Calendar, BarChart2, Bell, Settings, LogOut,
   ClipboardList, Clock, X, GraduationCap
 } from 'lucide-react';
 
@@ -37,7 +37,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   const navItems = [
     {
-      group: 'MAIN',
+      group: t('groupMain'),
       items: [
         { label: t('dashboard'), icon: LayoutDashboard, to: '/dashboard' },
         { label: t('students'), icon: Users, to: '/students' },
@@ -51,13 +51,13 @@ const Sidebar = ({ isOpen, onClose }) => {
       ],
     },
     {
-      group: 'COMMUNICATION',
+      group: t('groupCommunication'),
       items: [
         { label: t('notifications'), icon: Bell, to: '/notifications' },
       ],
     },
     {
-      group: 'SYSTEM',
+      group: t('groupSystem'),
       items: [
         { label: t('settings'), icon: Settings, to: '/settings' },
       ],
@@ -84,8 +84,8 @@ const Sidebar = ({ isOpen, onClose }) => {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto">
-        {navItems.map(group => (
-          <div key={group.group}>
+        {navItems.map((group, idx) => (
+          <div key={idx}>
             <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
               {group.group}
             </p>
@@ -110,12 +110,12 @@ const Sidebar = ({ isOpen, onClose }) => {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{user?.fullName || 'Teacher'}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">O'qituvchi</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{t('teacher')}</p>
           </div>
           <button
             onClick={handleLogout}
             title={t('logout')}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-150"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-150 cursor-pointer"
           >
             <LogOut size={16} />
           </button>

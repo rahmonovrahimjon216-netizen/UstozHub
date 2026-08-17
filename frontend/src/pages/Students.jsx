@@ -4,12 +4,14 @@ import PageContainer from '../components/layout/PageContainer';
 import StudentModal from '../components/students/StudentModal';
 import { EmptyState, Badge, Loading } from '../components/common';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { getStudents, addStudent, updateStudent, deleteStudent } from '../services/studentService';
 import { getClasses } from '../services/classService';
 import { Plus, Search, Eye, Edit2, Trash2, Users } from 'lucide-react';
 
 const Students = () => {
   const { user } = useAuth();
+  const { t } = useTheme();
   const navigate = useNavigate();
   const [students, setStudents] = useState([]);
   const [classes, setClasses] = useState([]);
@@ -48,7 +50,7 @@ const Students = () => {
 
   const handleDeleteStudent = async (id, e) => {
     e.stopPropagation();
-    if (window.confirm("O'quvchini o'chirishni tasdiqlaysizmi?")) {
+    if (window.confirm(t('confirmDelete'))) {
       await deleteStudent(id, user.id);
       loadData();
     }
@@ -62,7 +64,7 @@ const Students = () => {
     return matchesSearch && matchesClass && matchesStatus;
   });
 
-  const getClassObj = (classId) => classes.find(c => c.id === classId || c.name === classId) || { name: classId || 'Mavjud emas' };
+  const getClassObj = (classId) => classes.find(c => c.id === classId || c.name === classId) || { name: classId || '—' };
 
   return (
     <PageContainer>
@@ -70,15 +72,15 @@ const Students = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="page-title">O'quvchilar Boshqaruvi</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Jami {students.length} ta o'quvchi ro'yxatdan o'tgan</p>
+            <h1 className="page-title">{t('studentsTitle')}</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t('studentsSubtitle')}: {students.length}</p>
           </div>
           <button
             onClick={() => { setEditingStudent(null); setModalOpen(true); }}
-            className="btn-primary self-start sm:self-auto"
+            className="btn-primary self-start sm:self-auto cursor-pointer"
           >
             <Plus size={18} />
-            <span>O'quvchi Qo'shish</span>
+            <span>{t('addStudent')}</span>
           </button>
         </div>
 
@@ -88,7 +90,7 @@ const Students = () => {
             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Ismi yoki ID bo'yicha qidirish..."
+              placeholder={t('searchPlaceholder')}
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="input-field pl-10"
@@ -101,7 +103,7 @@ const Students = () => {
               onChange={e => setSelectedClass(e.target.value)}
               className="input-field min-w-36"
             >
-              <option value="all">Barcha Sinflar</option>
+              <option value="all">{t('allClasses')}</option>
               {classes.map(c => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
@@ -112,9 +114,9 @@ const Students = () => {
               onChange={e => setStatusFilter(e.target.value)}
               className="input-field min-w-32"
             >
-              <option value="all">Barcha Status</option>
-              <option value="active">Faol</option>
-              <option value="inactive">Nofaol</option>
+              <option value="all">{t('allStatus')}</option>
+              <option value="active">{t('active')}</option>
+              <option value="inactive">{t('inactive')}</option>
             </select>
           </div>
         </div>
@@ -126,14 +128,14 @@ const Students = () => {
           <div className="card">
             <EmptyState
               icon={Users}
-              title="O'quvchilar topilmadi"
-              description="Sizda hali o'quvchilar yo'q. Birinchi o'quvchingizni qo'shish uchun quyidagi tugmani bosing."
+              title={t('noStudentsFound')}
+              description={t('noStudents')}
               action={
                 <button
                   onClick={() => { setEditingStudent(null); setModalOpen(true); }}
-                  className="btn-primary"
+                  className="btn-primary cursor-pointer"
                 >
-                  <Plus size={18} /> O'quvchi Qo'shish
+                  <Plus size={18} /> {t('addStudent')}
                 </button>
               }
             />
@@ -144,12 +146,12 @@ const Students = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50">
-                    <th className="table-header p-4">O'quvchi (F.I.Sh)</th>
-                    <th className="table-header p-4">Sinfi</th>
-                    <th className="table-header p-4">Telefon</th>
-                    <th className="table-header p-4">Ota-onasi</th>
-                    <th className="table-header p-4">Status</th>
-                    <th className="table-header p-4 text-right">Amallar</th>
+                    <th className="table-header p-4">{t('studentCol')}</th>
+                    <th className="table-header p-4">{t('classCol')}</th>
+                    <th className="table-header p-4">{t('phoneCol')}</th>
+                    <th className="table-header p-4">{t('parentCol')}</th>
+                    <th className="table-header p-4">{t('statusCol')}</th>
+                    <th className="table-header p-4 text-right">{t('actionsCol')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -186,29 +188,29 @@ const Students = () => {
                         </td>
                         <td className="table-cell">
                           <Badge variant={student.status === 'active' ? 'green' : 'gray'}>
-                            {student.status === 'active' ? 'Faol' : 'Nofaol'}
+                            {student.status === 'active' ? t('active') : t('inactive')}
                           </Badge>
                         </td>
                         <td className="table-cell text-right">
                           <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
                             <button
                               onClick={() => navigate(`/students/${student.id}`)}
-                              className="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-gray-100 dark:hover:bg-gray-800"
-                              title="Ko'rish"
+                              className="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                              title={t('view')}
                             >
                               <Eye size={16} />
                             </button>
                             <button
                               onClick={() => { setEditingStudent(student); setModalOpen(true); }}
-                              className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-gray-100 dark:hover:bg-gray-800"
-                              title="Tahrirlash"
+                              className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                              title={t('edit')}
                             >
                               <Edit2 size={16} />
                             </button>
                             <button
                               onClick={(e) => handleDeleteStudent(student.id, e)}
-                              className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                              title="O'chirish"
+                              className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"
+                              title={t('delete')}
                             >
                               <Trash2 size={16} />
                             </button>

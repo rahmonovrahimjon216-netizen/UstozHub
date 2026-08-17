@@ -1,7 +1,9 @@
 import { get, set, generateId, KEYS } from './storageService';
 import { supabase } from './supabaseClient';
+import { initializeMockData } from './mockData';
 
 export const getSchedule = async (teacherId) => {
+  initializeMockData();
   if (!teacherId) return [];
 
   try {
@@ -11,7 +13,7 @@ export const getSchedule = async (teacherId) => {
       .eq('teacher_id', teacherId)
       .order('day', { ascending: true });
 
-    if (!error && data) {
+    if (!error && data && data.length > 0) {
       const mapped = data.map(d => ({
         id: d.id,
         teacherId: d.teacher_id,
@@ -32,10 +34,21 @@ export const getSchedule = async (teacherId) => {
     console.warn('Supabase getSchedule error, fallback to cache:', err);
   }
 
-  return get(KEYS.SCHEDULE + '_' + teacherId) || [];
+  let cached = get(KEYS.SCHEDULE + '_' + teacherId);
+  if (!cached || cached.length === 0) {
+    const all = get(KEYS.SCHEDULE) || [];
+    let match = all.filter(s => s.teacherId === teacherId);
+    if (match.length === 0 && all.length > 0) {
+      match = all.map(s => ({ ...s, teacherId }));
+    }
+    cached = match;
+    set(KEYS.SCHEDULE + '_' + teacherId, cached);
+  }
+  return cached;
 };
 
 export const addScheduleItem = async (teacherId, data) => {
+  initializeMockData();
   const item = {
     id: generateId('sch'),
     teacherId,
@@ -77,6 +90,7 @@ export const addScheduleItem = async (teacherId, data) => {
 };
 
 export const deleteScheduleItem = async (id, teacherId) => {
+  initializeMockData();
   try {
     await supabase.from('schedule').delete().eq('id', id);
   } catch (err) {

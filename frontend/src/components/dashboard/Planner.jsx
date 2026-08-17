@@ -1,10 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { getHomework } from '../../services/homeworkService';
+
+const monthTranslations = {
+  uz: ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'],
+  en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+  ru: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'],
+};
+
+const dayAbbrs = {
+  uz: ['Ya', 'Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sha'],
+  en: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
+  ru: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+};
 
 const Planner = () => {
   const { user } = useAuth();
+  const { language, t } = useTheme();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [homeworks, setHomeworks] = useState([]);
@@ -29,7 +43,8 @@ const Planner = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
 
-  const monthNames = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'];
+  const currentMonths = monthTranslations[language] || monthTranslations.uz;
+  const currentDays = dayAbbrs[language] || dayAbbrs.uz;
 
   const selectedDateStr = selectedDate.toISOString().split('T')[0];
   const selectedDayHomeworks = homeworks.filter(h => h.dueDate === selectedDateStr);
@@ -39,18 +54,18 @@ const Planner = () => {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <CalendarIcon size={18} className="text-primary-600" />
-          <h2 className="section-title">Rejalashtirgich (Taqvim)</h2>
+          <h2 className="section-title">{t('plannerTitle')}</h2>
         </div>
         <button
           onClick={() => { setCurrentDate(new Date()); setSelectedDate(new Date()); }}
-          className="text-xs font-medium px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200"
+          className="text-xs font-medium px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 cursor-pointer"
         >
-          Bugun
+          {t('todayBtn')}
         </button>
       </div>
 
       <div className="flex items-center justify-between mb-3 text-sm font-semibold text-gray-800 dark:text-gray-200">
-        <span>{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</span>
+        <span>{currentMonths[currentDate.getMonth()]} {currentDate.getFullYear()}</span>
         <div className="flex gap-1">
           <button onClick={prevMonth} className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"><ChevronLeft size={16} /></button>
           <button onClick={nextMonth} className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"><ChevronRight size={16} /></button>
@@ -58,7 +73,7 @@ const Planner = () => {
       </div>
 
       <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-gray-400 mb-2">
-        <span>Ya</span><span>Du</span><span>Se</span><span>Ch</span><span>Pa</span><span>Ju</span><span>Sha</span>
+        {currentDays.map((d, i) => <span key={i}>{d}</span>)}
       </div>
 
       <div className="grid grid-cols-7 gap-1 text-xs">
@@ -94,7 +109,7 @@ const Planner = () => {
 
       <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 space-y-2">
         <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-          {monthNames[selectedDate.getMonth()]} {selectedDate.getDate()} kunidagi vazifalar
+          {currentMonths[selectedDate.getMonth()]} {selectedDate.getDate()}
         </p>
         {selectedDayHomeworks.length > 0 ? (
           selectedDayHomeworks.map((h, idx) => (
@@ -104,7 +119,7 @@ const Planner = () => {
             </div>
           ))
         ) : (
-          <p className="text-xs text-gray-400 italic">Rejalashtirilgan vazifalar yo'q</p>
+          <p className="text-xs text-gray-400 italic">{t('noTasks')}</p>
         )}
       </div>
     </div>

@@ -1,7 +1,9 @@
 import { get, set, generateId, KEYS } from './storageService';
 import { supabase } from './supabaseClient';
+import { initializeMockData } from './mockData';
 
 export const getGrades = async (teacherId, filters = {}) => {
+  initializeMockData();
   if (!teacherId) return [];
 
   try {
@@ -15,7 +17,7 @@ export const getGrades = async (teacherId, filters = {}) => {
     }
 
     const { data, error } = await query;
-    if (!error && data) {
+    if (!error && data && data.length > 0) {
       const mapped = data.map(d => ({
         id: d.id,
         teacherId: d.teacher_id,
@@ -28,13 +30,26 @@ export const getGrades = async (teacherId, filters = {}) => {
         createdAt: d.created_at,
       }));
       set(KEYS.GRADES + '_' + teacherId, mapped);
-      return mapped;
+      let result = mapped;
+      if (filters.classId) result = result.filter(g => g.classId === filters.classId);
+      if (filters.studentId) result = result.filter(g => g.studentId === filters.studentId);
+      return result;
     }
   } catch (err) {
     console.warn('Supabase getGrades error, fallback to cache:', err);
   }
 
-  const cached = get(KEYS.GRADES + '_' + teacherId) || [];
+  let cached = get(KEYS.GRADES + '_' + teacherId);
+  if (!cached || cached.length === 0) {
+    const all = get(KEYS.GRADES) || [];
+    let match = all.filter(g => g.teacherId === teacherId);
+    if (match.length === 0 && all.length > 0) {
+      match = all.map(g => ({ ...g, teacherId }));
+    }
+    cached = match;
+    set(KEYS.GRADES + '_' + teacherId, cached);
+  }
+
   let result = cached;
   if (filters.classId) result = result.filter(g => g.classId === filters.classId);
   if (filters.studentId) result = result.filter(g => g.studentId === filters.studentId);
@@ -42,6 +57,7 @@ export const getGrades = async (teacherId, filters = {}) => {
 };
 
 export const addGrade = async (teacherId, data) => {
+  initializeMockData();
   const grade = {
     id: generateId('grade'),
     teacherId,
@@ -72,7 +88,6 @@ export const addGrade = async (teacherId, data) => {
     console.warn('Supabase addGrade error:', err);
   }
 
-  // Update cache
   const cached = get(KEYS.GRADES + '_' + teacherId) || [];
   set(KEYS.GRADES + '_' + teacherId, [grade, ...cached]);
 
@@ -80,6 +95,7 @@ export const addGrade = async (teacherId, data) => {
 };
 
 export const deleteGrade = async (id, teacherId) => {
+  initializeMockData();
   try {
     await supabase.from('grades').delete().eq('id', id);
   } catch (err) {

@@ -1,7 +1,9 @@
 import { get, set, generateId, KEYS } from './storageService';
 import { supabase } from './supabaseClient';
+import { initializeMockData } from './mockData';
 
 export const getClasses = async (teacherId) => {
+  initializeMockData();
   if (!teacherId) return [];
 
   try {
@@ -11,7 +13,7 @@ export const getClasses = async (teacherId) => {
       .eq('teacher_id', teacherId)
       .order('created_at', { ascending: false });
 
-    if (!error && data) {
+    if (!error && data && data.length > 0) {
       const mapped = data.map(d => ({
         id: d.id,
         teacherId: d.teacher_id,
@@ -30,11 +32,21 @@ export const getClasses = async (teacherId) => {
     console.warn('Supabase getClasses error, fallback to cache:', err);
   }
 
-  const cached = get(KEYS.CLASSES + '_' + teacherId) || [];
+  let cached = get(KEYS.CLASSES + '_' + teacherId);
+  if (!cached || cached.length === 0) {
+    const all = get(KEYS.CLASSES) || [];
+    let match = all.filter(c => c.teacherId === teacherId);
+    if (match.length === 0 && all.length > 0) {
+      match = all.map(c => ({ ...c, teacherId }));
+    }
+    cached = match;
+    set(KEYS.CLASSES + '_' + teacherId, cached);
+  }
   return cached;
 };
 
 export const getClassById = async (id) => {
+  initializeMockData();
   try {
     const { data, error } = await supabase.from('classes').select('*').eq('id', id).single();
     if (!error && data) {
@@ -64,6 +76,7 @@ const genClassCode = (name, subject) => {
 };
 
 export const addClass = async (teacherId, data) => {
+  initializeMockData();
   const localId = generateId('class');
   const cls = {
     id: localId,
@@ -102,6 +115,7 @@ export const addClass = async (teacherId, data) => {
 };
 
 export const updateClass = async (id, updates, teacherId) => {
+  initializeMockData();
   try {
     await supabase.from('classes').update({
       name: updates.name,
@@ -127,6 +141,7 @@ export const updateClass = async (id, updates, teacherId) => {
 };
 
 export const deleteClass = async (id, teacherId) => {
+  initializeMockData();
   try {
     await supabase.from('classes').delete().eq('id', id);
   } catch (err) {

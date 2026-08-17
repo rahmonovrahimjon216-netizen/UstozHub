@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Star, ArrowRight, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { getStudents } from '../../services/studentService';
 import { getGrades } from '../../services/gradeService';
 
 const StudentPerformance = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTheme();
   const [topStudents, setTopStudents] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -47,24 +49,24 @@ const StudentPerformance = () => {
     <div className="card p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="section-title">Top O'quvchilar</h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400">O'rtacha baholar bo'yicha</p>
+          <h2 className="section-title">{t('topStudentsTitle')}</h2>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{t('byAvgGrade')}</p>
         </div>
         <button
           onClick={() => navigate('/students')}
-          className="text-xs font-semibold text-primary-600 hover:text-primary-700 flex items-center gap-1"
+          className="text-xs font-semibold text-primary-600 hover:text-primary-700 flex items-center gap-1 cursor-pointer"
         >
-          Barchasi <ArrowRight size={14} />
+          {t('viewAll')} <ArrowRight size={14} />
         </button>
       </div>
 
       <div className="space-y-3">
         {loading ? (
-          <div className="text-center py-6 text-gray-400 text-xs animate-pulse">Yuklanmoqda...</div>
+          <div className="text-center py-6 text-gray-400 text-xs animate-pulse">{t('loading')}</div>
         ) : topStudents.length === 0 ? (
           <div className="text-center py-8 text-gray-400">
             <Users size={32} className="mx-auto mb-2 opacity-20" />
-            <p className="text-xs">O'quvchilar yo'q. Avval o'quvchi qo'shing.</p>
+            <p className="text-xs">{t('noStudents')}</p>
           </div>
         ) : (
           topStudents.map((stu, i) => (
@@ -80,7 +82,7 @@ const StudentPerformance = () => {
                 </div>
                 <div>
                   <h4 className="text-sm font-semibold text-gray-900 dark:text-white">{stu.fullName}</h4>
-                  <p className="text-xs text-gray-400">Sinf: {stu.classId || '—'}</p>
+                  <p className="text-xs text-gray-400">{t('classCol')}: {stu.classId || '—'}</p>
                 </div>
               </div>
               <div className="text-right">
