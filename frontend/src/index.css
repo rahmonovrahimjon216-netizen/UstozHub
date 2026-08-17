@@ -5,11 +5,36 @@
 @layer base {
   * {
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
   }
   
-  body {
+  html, body {
     @apply font-sans antialiased bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100;
     transition: background-color 0.2s ease, color 0.2s ease;
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  /* iOS Safari 100vh height fix */
+  @supports (-webkit-touch-callout: none) {
+    .h-screen {
+      height: 100dvh;
+    }
+  }
+
+  /* Prevent iOS Safari automatic zoom on focus when font-size < 16px */
+  @media screen and (max-width: 767px) {
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="number"],
+    input[type="date"],
+    input[type="time"],
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
   }
 
   ::-webkit-scrollbar {
@@ -29,13 +54,13 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white font-medium px-4 py-2 rounded-lg transition-all duration-150 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white font-medium px-4 py-2 rounded-lg transition-all duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer;
   }
   .btn-secondary {
-    @apply bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium px-4 py-2 rounded-lg transition-all duration-150 flex items-center gap-2;
+    @apply bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium px-4 py-2 rounded-lg transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer;
   }
   .btn-danger {
-    @apply bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg transition-all duration-150 flex items-center gap-2;
+    @apply bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer;
   }
   .card {
     @apply bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800;
@@ -91,6 +116,14 @@
   .table-cell {
     @apply px-4 py-3 text-sm text-gray-700 dark:text-gray-300;
   }
+}
+
+/* iOS Safe Area paddings */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 1rem);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 1rem);
 }
 
 /* Gradient backgrounds */
