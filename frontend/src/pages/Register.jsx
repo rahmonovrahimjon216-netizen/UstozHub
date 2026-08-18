@@ -33,24 +33,28 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#dce1e7] dark:bg-slate-950 flex items-center justify-center p-4 sm:p-6 md:p-10 transition-colors">
+    <div className="min-h-screen w-full bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-4 sm:p-6 md:p-10 transition-colors relative overflow-hidden">
+      {/* Subtle Ambient Brand Glows */}
+      <div className="absolute top-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-primary-500/10 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-indigo-500/10 blur-[120px] pointer-events-none" />
+
       {/* Outer Card Wrapper */}
-      <div className="relative w-full max-w-5xl bg-[#e6eaef] dark:bg-slate-900 rounded-[32px] p-6 sm:p-8 md:p-10 shadow-2xl border border-white/80 dark:border-slate-800 flex flex-col md:flex-row items-stretch justify-between gap-8 min-h-[580px]">
+      <div className="relative z-10 w-full max-w-5xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-[32px] p-6 sm:p-8 md:p-10 shadow-2xl border border-gray-200/80 dark:border-gray-800 flex flex-col md:flex-row items-stretch justify-between gap-8 min-h-[580px]">
         
-        {/* Left Panel: Logo Header + Language Selector + Professional Teacher Photo */}
+        {/* Left Panel: Logo Header + Language Selector + Teacher Photo */}
         <div className="flex-1 flex flex-col justify-between p-2 sm:p-4">
           
-          {/* Header Row: Logo Badge + Language Selector */}
+          {/* Header Row: Brand Logo Badge + Language Selector */}
           <div className="flex items-center justify-between gap-3 mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-slate-900 dark:bg-white flex items-center justify-center shadow-lg shrink-0">
-                <GraduationCap size={24} className="text-white dark:text-slate-900" />
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-primary-500/30 shrink-0">
+                <GraduationCap size={24} className="text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-extrabold text-slate-900 dark:text-white leading-none tracking-tight">
+                <h2 className="text-xl font-extrabold text-gray-900 dark:text-white leading-none tracking-tight">
                   UstozHub
                 </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5">
                   {t('platformSubtitle')}
                 </p>
               </div>
@@ -62,30 +66,30 @@ const Register = () => {
 
           {/* Professional Academic Photo Container */}
           <div className="flex-1 flex flex-col items-center justify-center relative w-full my-auto">
-            <div className="w-full max-w-md rounded-2xl overflow-hidden shadow-xl border border-white/60 dark:border-slate-800 bg-white/40 dark:bg-slate-800/40 p-2">
+            <div className="w-full max-w-md rounded-2xl overflow-hidden shadow-xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/40 p-2">
               <img 
                 src="/register_bg.png" 
                 alt="UstozHub Register" 
                 className="w-full h-[340px] sm:h-[400px] object-cover rounded-xl shadow-inner transition-transform duration-500 hover:scale-[1.02]"
               />
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium text-center mt-3">
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium text-center mt-3">
               {t('portalTitle')}
             </p>
           </div>
 
         </div>
 
-        {/* Right Panel: Clean Professional Register Form Card */}
+        {/* Right Panel: Clean Brand Register Form Card */}
         <div className="w-full md:w-[450px] shrink-0 flex items-center">
-          <div className="w-full bg-white dark:bg-slate-800 rounded-[28px] p-6 sm:p-8 shadow-xl border border-slate-100 dark:border-slate-700/60">
+          <div className="w-full bg-white dark:bg-gray-800/90 rounded-[28px] p-6 sm:p-8 shadow-xl border border-gray-100 dark:border-gray-700/60">
             
-            <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-1">
+            <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-1">
               {t('registerTitle')}
             </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-6">
               {t('alreadyHaveAccount')}{' '}
-              <Link to="/login" className="text-slate-900 dark:text-white font-bold hover:underline">
+              <Link to="/login" className="text-primary-600 dark:text-primary-400 font-bold hover:underline">
                 {t('signIn')}
               </Link>
             </p>
@@ -98,7 +102,7 @@ const Register = () => {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
                   {t('fullNameLabel')}
                 </label>
                 <input
@@ -107,13 +111,13 @@ const Register = () => {
                   required
                   value={form.fullName}
                   onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))}
-                  className="w-full px-4 py-2.5 bg-[#edf2f7] dark:bg-slate-900 border border-transparent focus:border-slate-400 dark:focus:border-slate-600 rounded-xl text-sm outline-none focus:bg-white dark:focus:bg-slate-900 text-slate-900 dark:text-white transition shadow-inner"
+                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:border-primary-500 dark:focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 rounded-xl text-sm outline-none text-gray-900 dark:text-white transition shadow-sm"
                   placeholder="Alisher Nazarov"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
                   {t('emailLabel')}
                 </label>
                 <input
@@ -122,13 +126,13 @@ const Register = () => {
                   required
                   value={form.email}
                   onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                  className="w-full px-4 py-2.5 bg-[#edf2f7] dark:bg-slate-900 border border-transparent focus:border-slate-400 dark:focus:border-slate-600 rounded-xl text-sm outline-none focus:bg-white dark:focus:bg-slate-900 text-slate-900 dark:text-white transition shadow-inner"
+                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:border-primary-500 dark:focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 rounded-xl text-sm outline-none text-gray-900 dark:text-white transition shadow-sm"
                   placeholder="name@domain.com"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
                   {t('phoneLabel')}
                 </label>
                 <input
@@ -136,13 +140,13 @@ const Register = () => {
                   type="tel"
                   value={form.phone}
                   onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                  className="w-full px-4 py-2.5 bg-[#edf2f7] dark:bg-slate-900 border border-transparent focus:border-slate-400 dark:focus:border-slate-600 rounded-xl text-sm outline-none focus:bg-white dark:focus:bg-slate-900 text-slate-900 dark:text-white transition shadow-inner"
+                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:border-primary-500 dark:focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 rounded-xl text-sm outline-none text-gray-900 dark:text-white transition shadow-sm"
                   placeholder="+998 90 000 00 00"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
                   {t('passwordLabel')}
                 </label>
                 <div className="relative">
@@ -152,13 +156,13 @@ const Register = () => {
                     required
                     value={form.password}
                     onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                    className="w-full px-4 py-2.5 bg-[#edf2f7] dark:bg-slate-900 border border-transparent focus:border-slate-400 dark:focus:border-slate-600 rounded-xl text-sm outline-none focus:bg-white dark:focus:bg-slate-900 text-slate-900 dark:text-white transition shadow-inner pr-10"
+                    className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:border-primary-500 dark:focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 rounded-xl text-sm outline-none text-gray-900 dark:text-white transition shadow-sm pr-10"
                     placeholder="••••••••"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -166,7 +170,7 @@ const Register = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
                   {t('confirmPasswordLabel')}
                 </label>
                 <input
@@ -175,7 +179,7 @@ const Register = () => {
                   required
                   value={form.confirmPassword}
                   onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))}
-                  className="w-full px-4 py-2.5 bg-[#edf2f7] dark:bg-slate-900 border border-transparent focus:border-slate-400 dark:focus:border-slate-600 rounded-xl text-sm outline-none focus:bg-white dark:focus:bg-slate-900 text-slate-900 dark:text-white transition shadow-inner"
+                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:border-primary-500 dark:focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 rounded-xl text-sm outline-none text-gray-900 dark:text-white transition shadow-sm"
                   placeholder="••••••••"
                 />
               </div>
@@ -186,7 +190,7 @@ const Register = () => {
                   id="reg-submit"
                   type="submit"
                   disabled={loading}
-                  className="bg-[#2b2d42] hover:bg-[#1d1e2c] active:bg-[#141520] text-white font-semibold px-8 py-2.5 rounded-xl text-sm shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
+                  className="bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white font-semibold px-8 py-2.5 rounded-xl text-sm shadow-lg shadow-primary-500/30 transition-all flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
                 >
                   {loading ? <Loader size={16} className="animate-spin" /> : null}
                   {t('createAccount')}

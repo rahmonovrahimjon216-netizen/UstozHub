@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import PageContainer from '../components/layout/PageContainer';
+import FaceIdScanner from '../components/attendance/FaceIdScanner';
 import { Loading } from '../components/common';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { getClasses } from '../services/classService';
 import { getStudents } from '../services/studentService';
 import { getAttendance, getAttendanceForDate, saveAttendance } from '../services/attendanceService';
-import { Save, CheckCircle, Calendar, Clock, History, Check } from 'lucide-react';
+import { Save, CheckCircle, Calendar, Clock, History, Check, Camera, ShieldCheck } from 'lucide-react';
 
 const Attendance = () => {
   const { user } = useAuth();
   const { t } = useTheme();
-  const [activeTab, setActiveTab] = useState('daily'); // 'daily' | 'monthly' | 'history'
+  const [activeTab, setActiveTab] = useState('daily'); // 'daily' | 'faceid' | 'monthly' | 'history'
   const [classes, setClasses] = useState([]);
   const [selectedClassId, setSelectedClassId] = useState('all');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -85,6 +86,21 @@ const Attendance = () => {
     setAttendanceMap(prev => ({ ...prev, [studentId]: status }));
   };
 
+  // Face ID auto-mark handler (Updates map and saves immediately to Supabase)
+  const handleFaceIdMarkPresent = async (studentId, status = 'present') => {
+    setAttendanceMap(prev => ({ ...prev, [studentId]: status }));
+    
+    // Auto save attendance record to DB
+    const currentStudents = students.length > 0 ? students : await getStudents(user?.id);
+    const records = (currentStudents || []).map(s => ({
+      studentId: s.id,
+      status: s.id === studentId ? status : (attendanceMap[s.id] || 'present'),
+    }));
+    await saveAttendance(user.id, selectedClassId || 'all', selectedDate, records);
+    const updatedAll = await getAttendance(user.id);
+    setAllAttendance(updatedAll || []);
+  };
+
   const handleMarkAllPresent = () => {
     const map = {};
     students.forEach(s => { map[s.id] = 'present'; });
@@ -155,13 +171,21 @@ const Attendance = () => {
             <p className="text-sm text-gray-500 dark:text-gray-400">{t('attendanceSubtitle')}</p>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setActiveTab('faceid')}
+              className="btn-primary bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/20 cursor-pointer"
+            >
+              <Camera size={18} />
+              <span>Face ID AI Skaner</span>
+            </button>
+
             {activeTab === 'daily' && (
               <>
-                <button onClick={handleMarkAllPresent} className="btn-secondary">
+                <button onClick={handleMarkAllPresent} className="btn-secondary cursor-pointer">
                   <CheckCircle size={18} className="text-emerald-500" />
                   <span>{t('markAllPresent')}</span>
                 </button>
-                <button onClick={handleSave} className="btn-primary">
+                <button onClick={handleSave} className="btn-primary cursor-pointer">
                   {savedSuccess ? <Check size={18} /> : <Save size={18} />}
                   <span>{savedSuccess ? t('savedSuccess') : t('saveAttendance')}</span>
                 </button>
@@ -171,10 +195,10 @@ const Attendance = () => {
         </div>
 
         {/* View Switcher Tabs */}
-        <div className="flex items-center gap-2 p-1.5 bg-gray-100 dark:bg-gray-800 rounded-2xl w-full sm:w-fit">
+        <div className="flex flex-wrap items-center gap-2 p-1.5 bg-gray-100 dark:bg-gray-800 rounded-2xl w-full sm:w-fit">
           <button
             onClick={() => setActiveTab('daily')}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'daily'
                 ? 'bg-white dark:bg-gray-900 text-primary-600 dark:text-primary-400 shadow-md'
                 : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
@@ -185,8 +209,20 @@ const Attendance = () => {
           </button>
 
           <button
+            onClick={() => setActiveTab('faceid')}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'faceid'
+                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/30'
+                : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+            }`}
+          >
+            <ShieldCheck size={16} />
+            <span>Face ID AI Skaner</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('monthly')}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'monthly'
                 ? 'bg-white dark:bg-gray-900 text-primary-600 dark:text-primary-400 shadow-md'
                 : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
@@ -198,7 +234,7 @@ const Attendance = () => {
 
           <button
             onClick={() => setActiveTab('history')}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'history'
                 ? 'bg-white dark:bg-gray-900 text-primary-600 dark:text-primary-400 shadow-md'
                 : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
@@ -216,45 +252,56 @@ const Attendance = () => {
           </div>
         )}
 
-        {/* Class & Date Filter Bar */}
-        <div className="card p-4 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-4">
-            <div>
-              <label className="text-xs font-bold text-gray-500 block mb-1">{t('selectClass')}</label>
-              <select
-                value={selectedClassId}
-                onChange={e => setSelectedClassId(e.target.value)}
-                className="input-field py-1.5 text-xs font-semibold cursor-pointer min-w-44"
-              >
-                <option value="all">Barcha sinflar</option>
-                {classes.map(c => (
-                  <option key={c.id} value={c.id}>{c.name} {c.subject ? `(${c.subject})` : ''}</option>
-                ))}
-              </select>
+        {/* FACE ID AI SCANNER TAB */}
+        {activeTab === 'faceid' && (
+          <FaceIdScanner
+            students={students}
+            onMarkPresent={handleFaceIdMarkPresent}
+            onClose={() => setActiveTab('daily')}
+          />
+        )}
+
+        {/* Class & Date Filter Bar (Hidden on Face ID tab) */}
+        {activeTab !== 'faceid' && (
+          <div className="card p-4 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-4">
+              <div>
+                <label className="text-xs font-bold text-gray-500 block mb-1">{t('selectClass')}</label>
+                <select
+                  value={selectedClassId}
+                  onChange={e => setSelectedClassId(e.target.value)}
+                  className="input-field py-1.5 text-xs font-semibold cursor-pointer min-w-44"
+                >
+                  <option value="all">Barcha sinflar</option>
+                  {classes.map(c => (
+                    <option key={c.id} value={c.id}>{c.name} {c.subject ? `(${c.subject})` : ''}</option>
+                  ))}
+                </select>
+              </div>
+
+              {activeTab === 'daily' && (
+                <div>
+                  <label className="text-xs font-bold text-gray-500 block mb-1">Sana</label>
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={e => setSelectedDate(e.target.value)}
+                    className="input-field py-1.5 text-xs font-semibold cursor-pointer"
+                  />
+                </div>
+              )}
             </div>
 
             {activeTab === 'daily' && (
-              <div>
-                <label className="text-xs font-bold text-gray-500 block mb-1">Sana</label>
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={e => setSelectedDate(e.target.value)}
-                  className="input-field py-1.5 text-xs font-semibold cursor-pointer"
-                />
+              <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800/60 px-4 py-2 rounded-xl text-xs font-bold">
+                <span className="text-emerald-600 dark:text-emerald-400">🟢 Keldi: {stats.present}</span>
+                <span className="text-red-600 dark:text-red-400">🔴 Kelmadi: {stats.absent}</span>
+                <span className="text-amber-600 dark:text-amber-400">🟡 Kasal: {stats.sick}</span>
+                <span className="text-blue-600 dark:text-blue-400">🔵 Kechikdi: {stats.late}</span>
               </div>
             )}
           </div>
-
-          {activeTab === 'daily' && (
-            <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800/60 px-4 py-2 rounded-xl text-xs font-bold">
-              <span className="text-emerald-600 dark:text-emerald-400">🟢 Keldi: {stats.present}</span>
-              <span className="text-red-600 dark:text-red-400">🔴 Kelmadi: {stats.absent}</span>
-              <span className="text-amber-600 dark:text-amber-400">🟡 Kasal: {stats.sick}</span>
-              <span className="text-blue-600 dark:text-blue-400">🔵 Kechikdi: {stats.late}</span>
-            </div>
-          )}
-        </div>
+        )}
 
         {/* TAB 1: DAILY ATTENDANCE MARKING */}
         {activeTab === 'daily' && (
