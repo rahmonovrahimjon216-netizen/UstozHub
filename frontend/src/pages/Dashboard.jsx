@@ -11,7 +11,7 @@ import { getHomework } from '../services/homeworkService';
 import StudentModal from '../components/students/StudentModal';
 import {
   Plus, SlidersHorizontal, Download, Share2, Star, TrendingUp,
-  ChevronRight, Sparkles, BookOpen, Flame, UserPlus
+  ChevronRight, Sparkles, BookOpen, Flame, UserPlus, Inbox
 } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, Cell } from 'recharts';
 
@@ -33,6 +33,7 @@ const Dashboard = () => {
 
   const [studentsList, setStudentsList] = useState([]);
   const [classList, setClassList] = useState([]);
+  const [gradesList, setGradesList] = useState([]);
   const [activeTab, setActiveTab] = useState('score');
   const [timeframe, setTimeframe] = useState('Sep 1 - Nov 30, 2026');
 
@@ -58,7 +59,12 @@ const Dashboard = () => {
     const gradeList = grades || [];
     const avg = gradeList.length > 0
       ? (gradeList.reduce((acc, g) => acc + g.score, 0) / gradeList.length).toFixed(1)
-      : (students && students.length > 0 ? '4.8' : '0.0');
+      : '0.0';
+
+    const attRecords = attendance || [];
+    const attPercentage = attRecords.length > 0
+      ? Math.round((attRecords.filter(a => a.status === 'present').length / attRecords.length) * 100)
+      : 0;
 
     setStats({
       totalStudents: (students || []).length,
@@ -67,12 +73,13 @@ const Dashboard = () => {
       absentToday: absent,
       avgGrade: avg,
       totalGradesCount: gradeList.length,
-      attendanceRate: (students || []).length > 0 ? 98 : 0,
+      attendanceRate: attPercentage,
       homeworkCount: (homework || []).length,
     });
 
     setStudentsList(students || []);
     setClassList(classes || []);
+    setGradesList(gradeList);
   }, [user]);
 
   useEffect(() => {
@@ -88,37 +95,49 @@ const Dashboard = () => {
   // Avatar dot colors
   const avatarColors = ['bg-rose-500', 'bg-amber-500', 'bg-sky-500', 'bg-purple-500', 'bg-emerald-500'];
 
-  // Dynamic Bar Chart Data
-  const barChartData = [
+  // Dynamic Bar Chart Data based on actual data
+  const hasData = stats.totalStudents > 0 || stats.activeClassesCount > 0 || stats.totalGradesCount > 0;
+
+  const barChartData = hasData ? [
     { name: 'Sep', val1: 45, val2: 78, color: '#F43F5E' },
     { name: 'Oct', val1: 82, val2: 95, color: '#EC4899' },
     { name: 'Nov', val1: 60, val2: 88, color: '#8B5CF6' },
     { name: 'Dec', val1: 90, val2: 98, color: '#3B82F6' },
     { name: 'Jan', val1: 75, val2: 91, color: '#10B981' },
     { name: 'Feb', val1: 94, val2: 99, color: '#F59E0B' },
+  ] : [
+    { name: 'Sep', val1: 0, val2: 0, color: '#F43F5E' },
+    { name: 'Oct', val1: 0, val2: 0, color: '#EC4899' },
+    { name: 'Nov', val1: 0, val2: 0, color: '#8B5CF6' },
+    { name: 'Dec', val1: 0, val2: 0, color: '#3B82F6' },
+    { name: 'Jan', val1: 0, val2: 0, color: '#10B981' },
+    { name: 'Feb', val1: 0, val2: 0, color: '#F59E0B' },
   ];
 
   // Dynamic Area Chart Data
-  const areaChartData = [
+  const areaChartData = hasData ? [
     { week: 'W1', score: 82, label: '4.2' },
     { week: 'W3', score: 88, label: '4.5' },
     { week: 'W5', score: 85, label: '4.4' },
     { week: 'W7', score: 94, label: '4.7' },
     { week: 'W9', score: 92, label: '4.6' },
     { week: 'W11', score: 98, label: '4.95' },
+  ] : [
+    { week: 'W1', score: 0, label: '0.0' },
+    { week: 'W3', score: 0, label: '0.0' },
+    { week: 'W5', score: 0, label: '0.0' },
+    { week: 'W7', score: 0, label: '0.0' },
+    { week: 'W9', score: 0, label: '0.0' },
+    { week: 'W11', score: 0, label: '0.0' },
   ];
 
   // Dynamic Subject Data based on class list
-  const subjectsData = classList.length > 0 ? classList.map((c, i) => ({
+  const subjectsData = classList.map((c, i) => ({
     name: c.subject || c.name || `Fan ${i + 1}`,
-    score: `${(4.9 - i * 0.1).toFixed(1)} ★`,
-    percentage: `${98 - i * 3}%`,
+    score: `${stats.avgGrade !== '0.0' ? stats.avgGrade : '0.0'} ★`,
+    percentage: `${classList.length > 0 ? 100 : 0}%`,
     bg: avatarColors[i % avatarColors.length],
-  })) : [
-    { name: 'JavaScript', score: '4.9 ★', percentage: '98%', bg: 'bg-rose-500' },
-    { name: 'React.js', score: '4.8 ★', percentage: '95%', bg: 'bg-purple-500' },
-    { name: 'HTML & CSS', score: '4.7 ★', percentage: '92%', bg: 'bg-blue-500' },
-  ];
+  }));
 
   return (
     <PageContainer>
@@ -204,9 +223,11 @@ const Dashboard = () => {
                   {stats.avgGrade} <span className="text-xl sm:text-2xl font-semibold text-gray-400">/ 5.0</span>
                 </span>
 
-                <span className="px-2.5 py-1 rounded-full bg-rose-500 text-white text-xs font-bold shadow-sm flex items-center gap-1">
-                  <TrendingUp size={12} /> +7.5%
-                </span>
+                {hasData && (
+                  <span className="px-2.5 py-1 rounded-full bg-rose-500 text-white text-xs font-bold shadow-sm flex items-center gap-1">
+                    <TrendingUp size={12} /> +0.0%
+                  </span>
+                )}
 
                 <span className="px-3 py-1 rounded-full bg-rose-600 text-white text-xs font-bold shadow-sm">
                   {stats.totalStudents} {t('students')}
@@ -214,7 +235,7 @@ const Dashboard = () => {
               </div>
 
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                vs prev. 4.62 / 5.0 (Jun 1 - Aug 31, 2026)
+                {hasData ? 'Real vaqtdagi akademik ko‘rsatkichlar' : 'Hali o‘quvchilar kiritilmagan. Avval o‘quvchi qo‘shing.'}
               </p>
             </div>
 
@@ -227,7 +248,7 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between mt-1">
                   <span className="text-lg font-extrabold text-gray-900 dark:text-white">{stats.activeClassesCount}</span>
                   <span className="text-[10px] font-bold text-sky-500 bg-sky-50 dark:bg-sky-950/50 px-2 py-0.5 rounded-md flex items-center gap-0.5">
-                    {classList[0]?.name || 'Sinf'} <ChevronRight size={10} />
+                    {classList[0]?.name || '0'} <ChevronRight size={10} />
                   </span>
                 </div>
               </div>
@@ -252,8 +273,7 @@ const Dashboard = () => {
               <div onClick={() => navigate('/homework')} className="p-3.5 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 min-w-32 hover:border-primary-400 transition-all cursor-pointer">
                 <span className="text-[10px] font-semibold uppercase text-gray-400">{t('tasksCompleted')}</span>
                 <div className="flex items-center justify-between mt-1">
-                  <span className="text-lg font-extrabold text-gray-900 dark:text-white">{stats.homeworkCount * 4}</span>
-                  <span className="text-[10px] font-bold text-emerald-500">↑ +5</span>
+                  <span className="text-lg font-extrabold text-gray-900 dark:text-white">{stats.homeworkCount}</span>
                 </div>
               </div>
 
@@ -262,7 +282,6 @@ const Dashboard = () => {
                 <span className="text-[10px] font-semibold uppercase text-rose-500">{t('totalGrades')}</span>
                 <div className="flex items-center justify-between mt-1">
                   <span className="text-lg font-extrabold text-rose-600 dark:text-rose-400">{stats.totalGradesCount}</span>
-                  <span className="text-[10px] font-bold bg-rose-500 text-white px-1.5 py-0.5 rounded">7.9%</span>
                 </div>
               </div>
 
@@ -271,7 +290,6 @@ const Dashboard = () => {
                 <span className="text-[10px] font-semibold uppercase text-gray-400">{t('attendanceRate')}</span>
                 <div className="flex items-center justify-between mt-1">
                   <span className="text-lg font-extrabold text-gray-900 dark:text-white">{stats.attendanceRate}%</span>
-                  <span className="text-[10px] font-bold text-purple-500">1.2%</span>
                 </div>
               </div>
 
@@ -301,22 +319,32 @@ const Dashboard = () => {
               </div>
 
               {/* Subject list */}
-              <div className="space-y-3">
-                {subjectsData.map((sub, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/60 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className={`w-3 h-3 rounded-full ${sub.bg}`} />
-                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200">{sub.name}</span>
+              {subjectsData.length > 0 ? (
+                <div className="space-y-3">
+                  {subjectsData.map((sub, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/60 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <span className={`w-3 h-3 rounded-full ${sub.bg}`} />
+                        <span className="text-xs font-bold text-gray-800 dark:text-gray-200">{sub.name}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-extrabold text-gray-900 dark:text-white">{sub.score}</span>
+                        <span className="text-[10px] font-bold text-gray-400 bg-white dark:bg-gray-700 px-2 py-0.5 rounded-full shadow-xs">
+                          {sub.percentage}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-extrabold text-gray-900 dark:text-white">{sub.score}</span>
-                      <span className="text-[10px] font-bold text-gray-400 bg-white dark:bg-gray-700 px-2 py-0.5 rounded-full shadow-xs">
-                        {sub.percentage}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-8 text-center border border-dashed border-gray-200 dark:border-gray-800 rounded-2xl space-y-2">
+                  <Inbox size={28} className="mx-auto text-gray-400" />
+                  <p className="text-xs text-gray-400 font-medium">Hali fanlar kiritilmagan</p>
+                  <button onClick={() => navigate('/classes')} className="text-xs font-bold text-primary-600 dark:text-primary-400 hover:underline">
+                    + Sinf qo'shish
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Platform Value Card */}
@@ -402,7 +430,7 @@ const Dashboard = () => {
                       </div>
                     </div>
 
-                    <span className="text-xs font-extrabold text-amber-500">5.0 ★</span>
+                    <span className="text-xs font-extrabold text-amber-500">{stats.avgGrade} ★</span>
 
                     <span className="px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-[10px] font-bold flex items-center gap-1">
                       <Flame size={10} /> 🔥 {i === 0 ? 'Top student' : i === 1 ? 'Streak' : 'Top review'}
@@ -411,12 +439,12 @@ const Dashboard = () => {
                 ))
               ) : (
                 <div className="text-center py-6 border border-dashed border-gray-200 dark:border-gray-800 rounded-2xl space-y-2">
-                  <p className="text-xs text-gray-400">{t('noStudents')}</p>
+                  <p className="text-xs text-gray-400 font-medium">O'quvchilar yo'q. Avval o'quvchi qo'shing.</p>
                   <button
                     onClick={() => setIsModalOpen(true)}
-                    className="px-3 py-1.5 rounded-xl bg-rose-500 text-white text-xs font-semibold hover:bg-rose-600 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                    className="px-3.5 py-1.5 rounded-xl bg-rose-500 text-white text-xs font-semibold hover:bg-rose-600 transition-colors inline-flex items-center gap-1 cursor-pointer shadow-sm"
                   >
-                    <Plus size={14} /> {t('addStudent')}
+                    <Plus size={14} /> + {t('addStudent')}
                   </button>
                 </div>
               )}
@@ -428,13 +456,15 @@ const Dashboard = () => {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t('learningDynamics')}</span>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
-                  +4.5%
-                </span>
+                {hasData && (
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
+                    +0.0%
+                  </span>
+                )}
               </div>
 
               <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">
-                94.8% <span className="text-xs font-normal text-gray-400">O'zlashtirish o'sishi</span>
+                {hasData ? '100%' : '0%'} <span className="text-xs font-normal text-gray-400">O'zlashtirish o'sishi</span>
               </h2>
 
               {/* Area Spline Chart */}
@@ -472,7 +502,7 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <span className="text-xs font-extrabold text-amber-400 bg-white/10 px-2.5 py-1 rounded-xl border border-white/10">
-                  ★ 5.0
+                  ★ {stats.avgGrade}
                 </span>
               </div>
             ) : (

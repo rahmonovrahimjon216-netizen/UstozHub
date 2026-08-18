@@ -1,9 +1,7 @@
 import { get, set, generateId, KEYS } from './storageService';
 import { supabase } from './supabaseClient';
-import { initializeMockData } from './mockData';
 
 export const getNotifications = async (teacherId) => {
-  initializeMockData();
   if (!teacherId) return [];
 
   try {
@@ -13,7 +11,7 @@ export const getNotifications = async (teacherId) => {
       .eq('teacher_id', teacherId)
       .order('created_at', { ascending: false });
 
-    if (!error && data && data.length > 0) {
+    if (!error && data) {
       const mapped = data.map(d => ({
         id: d.id,
         teacherId: d.teacher_id,
@@ -30,31 +28,17 @@ export const getNotifications = async (teacherId) => {
     console.warn('Supabase getNotifications error, fallback to cache:', err);
   }
 
-  let cached = get(KEYS.NOTIFICATIONS + '_' + teacherId);
-  if (!cached || cached.length === 0) {
-    const all = get(KEYS.NOTIFICATIONS) || [];
-    let match = all.filter(n => n.teacherId === teacherId);
-    if (match.length === 0 && all.length > 0) {
-      match = all.map(n => ({ ...n, teacherId }));
-    }
-    cached = match;
-    set(KEYS.NOTIFICATIONS + '_' + teacherId, cached);
-  }
-  return cached;
+  const cached = get(KEYS.NOTIFICATIONS + '_' + teacherId);
+  return cached || [];
 };
 
 export const getUnreadCount = (teacherId) => {
-  initializeMockData();
-  let cached = get(KEYS.NOTIFICATIONS + '_' + teacherId);
-  if (!cached || cached.length === 0) {
-    const all = get(KEYS.NOTIFICATIONS) || [];
-    cached = all;
-  }
+  if (!teacherId) return 0;
+  const cached = get(KEYS.NOTIFICATIONS + '_' + teacherId) || [];
   return cached.filter(n => !n.isRead).length;
 };
 
 export const markAsRead = async (id, teacherId) => {
-  initializeMockData();
   try {
     await supabase.from('notifications').update({ is_read: true }).eq('id', id);
   } catch (err) {
@@ -72,7 +56,6 @@ export const markAsRead = async (id, teacherId) => {
 };
 
 export const markAllAsRead = async (teacherId) => {
-  initializeMockData();
   try {
     await supabase.from('notifications').update({ is_read: true }).eq('teacher_id', teacherId);
   } catch (err) {
@@ -85,7 +68,6 @@ export const markAllAsRead = async (teacherId) => {
 };
 
 export const deleteNotification = async (id, teacherId) => {
-  initializeMockData();
   try {
     await supabase.from('notifications').delete().eq('id', id);
   } catch (err) {

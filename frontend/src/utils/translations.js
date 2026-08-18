@@ -75,20 +75,26 @@ export const translations = {
     exports: 'Eksport',
     revenue: "Ko'rsatkich",
     submissions: 'Topshiriqlar',
+    noSubjects: 'Hali fanlar kiritilmagan',
+    learningGrowth: "O'zlashtirish o'sishi",
+    realtimePerformance: "Real vaqtdagi akademik ko'rsatkichlar",
 
-    // Notifications Translation Keys
-    notifAbsenceTitle: 'Kelmadi ogohlantirishi',
-    notifAbsenceMsg: 'Hasan Karimov ketma-ket 3 kun darsga kelmadi.',
-    notifGradeTitle: "A'lo Baho",
-    notifGradeMsg: 'Ali Valiyev JavaScript testidan 5 baho oldi.',
-    notifHwTitle: 'Uy vazifasi muddati',
-    notifHwMsg: "JavaScript Massivlar topshirig'i tugashiga 2 kun qoldi.",
-    notifMeetingTitle: 'Ota-onalar majlisi',
-    notifMeetingMsg: 'Ota-onalar majlisi ushbu juma kuni soat 16:00 ga belgilangan.',
-    notifNewStudentTitle: "Yangi o'quvchi qo'shildi",
-    notifNewStudentMsg: "Feruza Xolmatova 9-A sinfiga qo'shildi.",
-    notifTestReminderTitle: 'Test eslatmasi',
-    notifTestReminderMsg: "Ertaga bo'lib o'tadigan Python testini unutmang.",
+    // Calendar
+    academicCalendar: 'Akademik Taqvim',
+    calendarSubtitle: 'Imtihonlar, topshiriqlar va muhim tadbirlar jadvali',
+    addEvent: 'Tadbir Qo\'shish',
+    upcomingEvents: 'Kutilayotgan Tadbirlar',
+    noEvents: 'Rejalashtirilgan tadbirlar yo\'q',
+    eventTitle: 'Tadbir Nomi',
+    category: 'Kategoriya',
+    dateLabel: 'Sana',
+    exam: 'Imtihon',
+    meeting: 'Majlis',
+    important: 'Muhim',
+
+    // Notifications
+    noNotifications: 'Yangi bildirishnomalar yo\'q',
+    markAllRead: 'Hamasini o\'qilgan qilish',
 
     // Auth & Account
     loginTitle: 'Tizimga kirish',
@@ -147,13 +153,17 @@ export const translations = {
     totalAbsent: 'Kelmaganlar',
     totalSick: 'Kasallar',
     totalLate: 'Kechikkanlar',
+    faceIdTitle: 'AI Face ID Skaner',
+    startCamera: 'Kamerani Yoqish',
+    stopCamera: 'Kamerani O\'chirish',
 
     // Classes Page
     classesTitle: 'Sinflar Boshqaruvi',
-    classesSubtitle: 'Maktab sinflari va fanlar',
+    classesSubtitle: 'Faol sinflaringiz hamda fanlaringiz ro\'yxati',
     addClass: "Sinf Qo'shish",
     subject: 'Fan',
     studentCount: "O'quvchilar soni",
+    noClasses: 'Hali sinflar kiritilmagan',
 
     // Homework & Grades
     homeworkTitle: 'Uy Vazifalari',
@@ -166,6 +176,11 @@ export const translations = {
     save: 'Saqlash',
     cancel: 'Bekor qilish',
     search: 'Qidirish...',
+
+    // Schedule Page
+    scheduleTitle: 'Dars Jadvali',
+    scheduleSubtitle: 'Haftalik dars jadvalingiz',
+    addSchedule: 'Dars Qo\'shish',
 
     // Days of Week
     monday: 'Dushanba',
@@ -253,20 +268,26 @@ export const translations = {
     exports: 'Export',
     revenue: 'Score',
     submissions: 'Submissions',
+    noSubjects: 'No subjects added yet',
+    learningGrowth: 'Learning growth',
+    realtimePerformance: 'Real-time academic performance',
 
-    // Notifications Translation Keys
-    notifAbsenceTitle: 'Absence Alert',
-    notifAbsenceMsg: 'Hasan Karimov has been absent for 3 consecutive days.',
-    notifGradeTitle: 'Excellent Grade',
-    notifGradeMsg: 'Ali Valiyev received a grade of 5 on the JavaScript test.',
-    notifHwTitle: 'Homework Due Soon',
-    notifHwMsg: 'JavaScript Arrays & Objects homework is due in 2 days.',
-    notifMeetingTitle: 'Parent Meeting',
-    notifMeetingMsg: 'Parent-teacher meeting is scheduled for this Friday at 16:00.',
-    notifNewStudentTitle: 'New Student Enrolled',
-    notifNewStudentMsg: 'Feruza Xolmatova has been added to class 9-A.',
-    notifTestReminderTitle: 'Test Reminder',
-    notifTestReminderMsg: "Don't forget the Python quiz scheduled for tomorrow.",
+    // Calendar
+    academicCalendar: 'Academic Calendar',
+    calendarSubtitle: 'Exams, homework deadlines, meetings and key events',
+    addEvent: 'Add Event',
+    upcomingEvents: 'Upcoming Events',
+    noEvents: 'No upcoming events',
+    eventTitle: 'Event Title',
+    category: 'Category',
+    dateLabel: 'Date',
+    exam: 'Exam',
+    meeting: 'Meeting',
+    important: 'Important',
+
+    // Notifications
+    noNotifications: 'No new notifications',
+    markAllRead: 'Mark all as read',
 
     // Auth & Account
     loginTitle: 'Login',
@@ -325,13 +346,17 @@ export const translations = {
     totalAbsent: 'Absent',
     totalSick: 'Sick',
     totalLate: 'Late',
+    faceIdTitle: 'AI Face ID Scanner',
+    startCamera: 'Start Camera',
+    stopCamera: 'Stop Camera',
 
     // Classes Page
     classesTitle: 'Class Management',
-    classesSubtitle: 'School classes and subjects',
+    classesSubtitle: 'List of your active classes and subjects',
     addClass: 'Add Class',
     subject: 'Subject',
     studentCount: 'Total Students',
+    noClasses: 'No classes added yet',
 
     // Homework & Grades
     homeworkTitle: 'Homework Tasks',
@@ -344,6 +369,11 @@ export const translations = {
     save: 'Save',
     cancel: 'Cancel',
     search: 'Search...',
+
+    // Schedule Page
+    scheduleTitle: 'Class Schedule',
+    scheduleSubtitle: 'Your weekly teaching timetable',
+    addSchedule: 'Add Schedule',
 
     // Days of Week
     monday: 'Monday',
@@ -431,20 +461,26 @@ export const translations = {
     exports: 'Экспорт',
     revenue: 'Балл',
     submissions: 'Сдачи',
+    noSubjects: 'Предметы еще не добавлены',
+    learningGrowth: 'Рост успеваемости',
+    realtimePerformance: 'Академические показатели в реальном времени',
 
-    // Notifications Translation Keys
-    notifAbsenceTitle: 'Уведомление об отсутствии',
-    notifAbsenceMsg: 'Хасан Каримов отсутствует 3 дня подряд.',
-    notifGradeTitle: 'Отличная оценка',
-    notifGradeMsg: 'Али Валиев получил оценку 5 по тесту JavaScript.',
-    notifHwTitle: 'Срок сдачи ДЗ',
-    notifHwMsg: 'До сдачи ДЗ по массивам JavaScript осталось 2 дня.',
-    notifMeetingTitle: 'Родительское собрание',
-    notifMeetingMsg: 'Родительское собрание запланировано на эту пятницу в 16:00.',
-    notifNewStudentTitle: 'Добавлен новый ученик',
-    notifNewStudentMsg: 'Феруза Холматова добавлена в 9-А класс.',
-    notifTestReminderTitle: 'Напоминание о тесте',
-    notifTestReminderMsg: 'Не забудьте про тест по Python на завтра.',
+    // Calendar
+    academicCalendar: 'Учебный Календарь',
+    calendarSubtitle: 'Экзамены, домашние задания, встречи и ключевые события',
+    addEvent: 'Добавить Событие',
+    upcomingEvents: 'Предстоящие События',
+    noEvents: 'Нет предстоящих событий',
+    eventTitle: 'Название События',
+    category: 'Категория',
+    dateLabel: 'Дата',
+    exam: 'Экзамен',
+    meeting: 'Собрание',
+    important: 'Важно',
+
+    // Notifications
+    noNotifications: 'Нет новых уведомлений',
+    markAllRead: 'Отметить все как прочитанные',
 
     // Auth & Account
     loginTitle: 'Вход в систему',
@@ -503,13 +539,17 @@ export const translations = {
     totalAbsent: 'Отсутствуют',
     totalSick: 'Больны',
     totalLate: 'Опоздали',
+    faceIdTitle: 'ИИ Face ID Сканер',
+    startCamera: 'Включить Камеру',
+    stopCamera: 'Выключить Камеру',
 
     // Classes Page
     classesTitle: 'Управление Классами',
-    classesSubtitle: 'Классы и предметы',
+    classesSubtitle: 'Список активных классов и предметов',
     addClass: 'Добавить Класс',
     subject: 'Предмет',
     studentCount: 'Количество учеников',
+    noClasses: 'Классы еще не добавлены',
 
     // Homework & Grades
     homeworkTitle: 'Домашние Задания',
@@ -522,6 +562,11 @@ export const translations = {
     save: 'Сохранить',
     cancel: 'Отмена',
     search: 'Поиск...',
+
+    // Schedule Page
+    scheduleTitle: 'Расписание Уроков',
+    scheduleSubtitle: 'Ваше еженедельное расписание',
+    addSchedule: 'Добавить Урок',
 
     // Days of Week
     monday: 'Понедельник',

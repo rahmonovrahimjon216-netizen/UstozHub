@@ -1,9 +1,7 @@
 import { get, set, generateId, KEYS } from './storageService';
 import { supabase } from './supabaseClient';
-import { initializeMockData } from './mockData';
 
 export const getAttendance = async (teacherId, filters = {}) => {
-  initializeMockData();
   if (!teacherId) return [];
 
   try {
@@ -20,7 +18,7 @@ export const getAttendance = async (teacherId, filters = {}) => {
     }
 
     const { data, error } = await query;
-    if (!error && data && data.length > 0) {
+    if (!error && data) {
       const mapped = data.map(d => ({
         id: d.id,
         teacherId: d.teacher_id,
@@ -45,25 +43,8 @@ export const getAttendance = async (teacherId, filters = {}) => {
     console.warn('Supabase getAttendance error, fallback to cache:', err);
   }
 
-  let cached = get(KEYS.ATTENDANCE + '_' + teacherId);
-  if (!cached || cached.length === 0) {
-    const all = get(KEYS.ATTENDANCE) || [];
-    let match = all.filter(a => a.teacherId === teacherId);
-    if (match.length === 0 && all.length > 0) {
-      match = all.map(a => ({ ...a, teacherId }));
-    }
-    cached = match;
-    set(KEYS.ATTENDANCE + '_' + teacherId, cached);
-  }
-
-  let result = cached;
-  if (filters.classId && filters.classId !== 'all') {
-    result = result.filter(a => a.classId === filters.classId);
-  }
-  if (filters.date) {
-    result = result.filter(a => a.date === filters.date);
-  }
-  return result;
+  const cached = get(KEYS.ATTENDANCE + '_' + teacherId);
+  return cached || [];
 };
 
 export const getAttendanceForDate = async (teacherId, classId, date) => {
@@ -71,7 +52,6 @@ export const getAttendanceForDate = async (teacherId, classId, date) => {
 };
 
 export const saveAttendance = async (teacherId, classId, date, records) => {
-  initializeMockData();
   const supabasePayload = records.map(r => ({
     teacher_id: teacherId,
     class_id: classId || 'all',
