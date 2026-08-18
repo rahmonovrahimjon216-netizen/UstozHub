@@ -3,12 +3,14 @@ import PageContainer from '../components/layout/PageContainer';
 import Modal from '../components/common/Modal';
 import { Badge, Loading } from '../components/common';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { getClasses } from '../services/classService';
 import { getHomework, addHomework, deleteHomework } from '../services/homeworkService';
 import { Plus, Calendar, Trash2 } from 'lucide-react';
 
 const Homework = () => {
   const { user } = useAuth();
+  const { t } = useTheme();
   const [classes, setClasses] = useState([]);
   const [homeworkList, setHomeworkList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,13 +34,28 @@ const Homework = () => {
       setClasses(clsList || []);
       setHomeworkList(hwList || []);
       if (clsList && clsList.length > 0 && !form.classId) {
-        setForm(f => ({ ...f, classId: clsList[0].id, subject: clsList[0].subject }));
+        setForm(f => ({ ...f, classId: clsList[0].id, subject: clsList[0].subject || '' }));
       }
       setLoading(false);
     }
   };
 
   useEffect(() => { loadData(); }, [user]);
+
+  const handleOpenModal = async () => {
+    if (user) {
+      const clsList = await getClasses(user.id);
+      setClasses(clsList || []);
+      if (clsList && clsList.length > 0) {
+        setForm(f => ({
+          ...f,
+          classId: f.classId || clsList[0].id,
+          subject: f.subject || clsList[0].subject || ''
+        }));
+      }
+    }
+    setModalOpen(true);
+  };
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -66,11 +83,11 @@ const Homework = () => {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="page-title">Uy Vazifalari</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Dars vazifalari va muddatlarni kuzating</p>
+            <h1 className="page-title">{t('homeworkTitle')}</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t('homeworkSubtitle')}</p>
           </div>
-          <button onClick={() => setModalOpen(true)} className="btn-primary">
-            <Plus size={18} /> Vazifa Yaratish
+          <button onClick={handleOpenModal} className="btn-primary">
+            <Plus size={18} /> + {t('addHomework')}
           </button>
         </div>
 
@@ -78,7 +95,7 @@ const Homework = () => {
           <Loading rows={4} />
         ) : homeworkList.length === 0 ? (
           <div className="card p-8 text-center text-gray-500">
-            Hali uy vazifalari yaratilmagan. "+ Vazifa Yaratish" tugmasini bosing.
+            Hali uy vazifalari yaratilmagan. "+ {t('addHomework')}" tugmasini bosing.
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

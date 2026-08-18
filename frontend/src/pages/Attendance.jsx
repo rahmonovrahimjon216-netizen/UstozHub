@@ -6,7 +6,8 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { getClasses } from '../services/classService';
 import { getStudents } from '../services/studentService';
-import { getAttendance, getAttendanceForDate, saveAttendance } from '../services/attendanceService';
+import { getAttendance, getAttendanceForDate, saveAttendance, saveSingleFaceIdAttendance } from '../services/attendanceService';
+import { supabase } from '../services/supabaseClient';
 import { Save, CheckCircle, Calendar, Clock, History, Check, Camera, ShieldCheck } from 'lucide-react';
 
 const Attendance = () => {
@@ -86,17 +87,29 @@ const Attendance = () => {
     setAttendanceMap(prev => ({ ...prev, [studentId]: status }));
   };
 
-  // Face ID auto-mark handler (Updates map and saves immediately to Supabase)
+  // Face ID auto-mark handler (Directly persists to Supabase)
   const handleFaceIdMarkPresent = async (studentId, status = 'present') => {
     setAttendanceMap(prev => ({ ...prev, [studentId]: status }));
     
-    // Auto save attendance record to DB
-    const currentStudents = students.length > 0 ? students : await getStudents(user?.id);
-    const records = (currentStudents || []).map(s => ({
-      studentId: s.id,
-      status: s.id === studentId ? status : (attendanceMap[s.id] || 'present'),
-    }));
-    await saveAttendance(user.id, selectedClassId || 'all', selectedDate, records);
+    if (!user) return;
+    const currentStudents = students.length > 0 ? students : await getStudents(user.id);
+    const targetStudent = (currentStudents || []).find(s => s.id === studentId);
+    const studentClassId = targetStudent?.classId || selectedClassId || 'all';
+
+    // Direct Supabase saving for Face ID scan
+    await saveSingleFaceIdAttendance(user.id, studentId, studentClassId, selectedDate, status);
+
+    // Save notification to Supabase
+    try {
+      await supabase.from('notifications').insert([{
+        teacher_id: user.id,
+        title: 'Face ID Davomat',
+        message: `${targetStudent?.fullName || "O'quvchi"} Face ID orqali keldi deb belgilandi.`,
+        type: 'success',
+        is_read: false
+      }]);
+    } catch (e) {}
+
     const updatedAll = await getAttendance(user.id);
     setAllAttendance(updatedAll || []);
   };

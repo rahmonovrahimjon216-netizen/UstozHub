@@ -88,4 +88,39 @@ export const saveAttendance = async (teacherId, classId, date, records) => {
   return newRecords;
 };
 
-export default { getAttendance, getAttendanceForDate, saveAttendance };
+export const saveSingleFaceIdAttendance = async (teacherId, studentId, classId, date, status = 'present') => {
+  if (!teacherId || !studentId) return null;
+
+  const curDate = date || new Date().toISOString().split('T')[0];
+  const payload = {
+    teacher_id: teacherId,
+    class_id: classId || 'all',
+    student_id: studentId,
+    date: curDate,
+    status,
+    note: 'Face ID AI biometrik skaner',
+  };
+
+  try {
+    await supabase.from('attendance').upsert([payload]);
+  } catch (err) {
+    console.warn('Supabase saveSingleFaceIdAttendance error:', err);
+  }
+
+  const cached = get(KEYS.ATTENDANCE + '_' + teacherId) || [];
+  const filtered = cached.filter(a => !(a.studentId === studentId && a.date === curDate));
+  const newRec = {
+    id: generateId('att'),
+    teacherId,
+    classId: payload.class_id,
+    studentId,
+    date: curDate,
+    status,
+    note: payload.note,
+    createdAt: new Date().toISOString(),
+  };
+  set(KEYS.ATTENDANCE + '_' + teacherId, [...filtered, newRec]);
+  return newRec;
+};
+
+export default { getAttendance, getAttendanceForDate, saveAttendance, saveSingleFaceIdAttendance };

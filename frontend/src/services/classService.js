@@ -2,7 +2,10 @@ import { get, set, generateId, KEYS } from './storageService';
 import { supabase } from './supabaseClient';
 
 export const getClasses = async (teacherId) => {
-  if (!teacherId) return [];
+  if (!teacherId) {
+    const globalCached = get(KEYS.CLASSES) || [];
+    return globalCached;
+  }
 
   try {
     const { data, error } = await supabase
@@ -11,7 +14,7 @@ export const getClasses = async (teacherId) => {
       .eq('teacher_id', teacherId)
       .order('created_at', { ascending: false });
 
-    if (!error && data) {
+    if (!error && data && data.length > 0) {
       const mapped = data.map(d => ({
         id: d.id,
         teacherId: d.teacher_id,
@@ -24,14 +27,22 @@ export const getClasses = async (teacherId) => {
         createdAt: d.created_at,
       }));
       set(KEYS.CLASSES + '_' + teacherId, mapped);
+      set(KEYS.CLASSES, mapped);
       return mapped;
     }
   } catch (err) {
     console.warn('Supabase getClasses error, fallback to cache:', err);
   }
 
-  const cached = get(KEYS.CLASSES + '_' + teacherId);
-  return cached || [];
+  // Check teacher specific cache
+  const teacherCached = get(KEYS.CLASSES + '_' + teacherId);
+  if (teacherCached && teacherCached.length > 0) {
+    return teacherCached;
+  }
+
+  // Fallback to global cache
+  const globalCached = get(KEYS.CLASSES) || [];
+  return globalCached.filter(c => !c.teacherId || c.teacherId === teacherId);
 };
 
 export const getClassById = async (id) => {
@@ -95,8 +106,15 @@ export const addClass = async (teacherId, data) => {
     console.warn('Supabase addClass error:', err);
   }
 
-  const cached = get(KEYS.CLASSES + '_' + teacherId) || [];
-  set(KEYS.CLASSES + '_' + teacherId, [cls, ...cached]);
+  // Update teacher cache
+  const teacherCached = get(KEYS.CLASSES + '_' + teacherId) || [];
+  const updatedTeacher = [cls, ...teacherCached.filter(c => c.id !== cls.id)];
+  set(KEYS.CLASSES + '_' + teacherId, updatedTeacher);
+
+  // Update global cache
+  const globalCached = get(KEYS.CLASSES) || [];
+  const updatedGlobal = [cls, ...globalCached.filter(c => c.id !== cls.id)];
+  set(KEYS.CLASSES, updatedGlobal);
 
   return cls;
 };
@@ -115,12 +133,19 @@ export const updateClass = async (id, updates, teacherId) => {
   }
 
   if (teacherId) {
-    const cached = get(KEYS.CLASSES + '_' + teacherId) || [];
-    const idx = cached.findIndex(c => c.id === id);
+    const teacherCached = get(KEYS.CLASSES + '_' + teacherId) || [];
+    const idx = teacherCached.findIndex(c => c.id === id);
     if (idx !== -1) {
-      cached[idx] = { ...cached[idx], ...updates };
-      set(KEYS.CLASSES + '_' + teacherId, cached);
+      teacherCached[idx] = { ...teacherCached[idx], ...updates };
+      set(KEYS.CLASSES + '_' + teacherId, teacherCached);
     }
+  }
+
+  const globalCached = get(KEYS.CLASSES) || [];
+  const gIdx = globalCached.findIndex(c => c.id === id);
+  if (gIdx !== -1) {
+    globalCached[gIdx] = { ...globalCached[gIdx], ...updates };
+    set(KEYS.CLASSES, globalCached);
   }
 
   return true;
@@ -134,9 +159,12 @@ export const deleteClass = async (id, teacherId) => {
   }
 
   if (teacherId) {
-    const cached = get(KEYS.CLASSES + '_' + teacherId) || [];
-    set(KEYS.CLASSES + '_' + teacherId, cached.filter(c => c.id !== id));
+    const teacherCached = get(KEYS.CLASSES + '_' + teacherId) || [];
+    set(KEYS.CLASSES + '_' + teacherId, teacherCached.filter(c => c.id !== id));
   }
+
+  const globalCached = get(KEYS.CLASSES) || [];
+  set(KEYS.CLASSES, globalCached.filter(c => c.id !== id));
 
   return true;
 };
